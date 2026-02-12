@@ -1,3 +1,4 @@
 flask
 werkzeug
 deep-translator
+gunicorn

@@ -3,15 +3,26 @@ import os
 import zipfile
 import json
 import re
-import re
 from werkzeug.utils import secure_filename
 import tempfile
 from deep_translator import GoogleTranslator
 
+import logging
+import time
+from datetime import datetime
+import shutil
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 app = Flask(__name__, static_folder='static', template_folder='static')
 
 # Configuration
-UPLOAD_FOLDER = tempfile.mkdtemp()
+UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+    
 ALLOWED_EXTENSIONS = {'docx'}
 MASTER_LIBRARY = 'master_library.json'
 
@@ -20,6 +31,33 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def cleanup_old_files():
+    """Delete files older than 60 seconds for privacy"""
+    try:
+        now = time.time()
+        cutoff = 60  # 1 minute retention
+        count = 0
+        for f in os.listdir(UPLOAD_FOLDER):
+            path = os.path.join(UPLOAD_FOLDER, f)
+            if os.stat(path).st_mtime < now - cutoff:
+                if os.path.isfile(path):
+                    os.remove(path)
+                elif os.path.isdir(path):
+                    shutil.rmtree(path)
+                count += 1
+        if count > 0:
+            logger.info(f"Cleaned up {count} old files/dirs")
+    except Exception as e:
+        logger.error(f"Cleanup error: {e}")
+
+def log_upload(filename):
+    """Log upload event for audit"""
+    try:
+        with open('uploads.log', 'a') as f:
+            f.write(f"{datetime.now().isoformat()} - UPLOAD - {filename}\n")
+    except Exception as e:
+        logger.error(f"Logging error: {e}")
 
 def get_win_path(unix_path):
     """Converts a WSL path to a Windows path"""
@@ -187,8 +225,14 @@ def upload_file():
     try:
         # Save uploaded file
         filename = secure_filename(file.filename)
+        
+        # Log and cleanup before saving
+        log_upload(filename)
+        cleanup_old_files()
+        
         upload_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(upload_path)
+        logger.info(f"File saved: {upload_path}")
         
         # Extract strings and create translation map
         base_name = os.path.splitext(filename)[0]
@@ -226,4 +270,5 @@ if __name__ == '__main__':
     print(f"Upload folder: {UPLOAD_FOLDER}")
     print(f"Master library: {MASTER_LIBRARY}")
     print("Starting Flask server on http://localhost:5000")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Debug=False for production readiness testing, though Gunicorn overrides this
+    app.run(debug=False, host='0.0.0.0', port=5000)

@@ -30,8 +30,14 @@ fi
 # Start the server
 echo ""
 echo "✅ Starting Flask server..."
+# Start the server (Production Mode)
+echo ""
+echo "✅ Starting Gunicorn server..."
 echo "📍 Web app will be available at: http://localhost:5000"
+echo "   - 4 concurrent workers"
+echo "   - 120s timeout"
 echo "Press CTRL+C to stop the server"
 echo ""
 
-venv/bin/python3 app.py
+# Use exec to replace the shell process
+exec venv/bin/gunicorn -w 4 -b 0.0.0.0:5000 --timeout 120 --access-logfile - --error-logfile - app:app
