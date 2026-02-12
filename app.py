@@ -21,7 +21,7 @@ app = Flask(__name__, static_folder='static', template_folder='static')
 # Configuration
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
 if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
     
 ALLOWED_EXTENSIONS = {'docx'}
 MASTER_LIBRARY = 'master_library.json'
