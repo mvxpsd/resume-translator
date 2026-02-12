@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Translator - French to English</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>📄 Resume Translator</h1>
+            <p class="subtitle">Transform your French resume to English while preserving all formatting</p>
+
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-icon">📁</div>
+                <p class="upload-text">Drag & drop your French resume here</p>
+                <p class="upload-subtext">or click to browse</p>
+                <input type="file" id="fileInput" accept=".docx" hidden>
+            </div>
+
+            <div class="progress-container" id="progressContainer" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">Translating your resume...</p>
+            </div>
+
+            <div class="error-message" id="errorMessage" style="display: none;"></div>
+            <div class="success-message" id="successMessage" style="display: none;"></div>
+        </div>
+
+        <div class="info-section">
+            <h3>✨ Features</h3>
+            <ul>
+                <li>🎨 Preserves all formatting, fonts, and styles</li>
+                <li>📊 Maintains tables, charts, and layouts</li>
+                <li>🚀 Fast translation using AI-powered library</li>
+                <li>📥 Download translated DOCX format</li>
+                <li>🔒 Secure - files are processed locally</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+
+        // Click to upload
+        uploadZone.addEventListener('click', () => fileInput.click());
+
+        // Drag and drop
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('drag-over');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('drag-over');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            // Validate file type
+            if (!file.name.endsWith('.docx')) {
+                showError('Please upload a DOCX file');
+                return;
+            }
+
+            // Validate file size (16MB max)
+            if (file.size > 16 * 1024 * 1024) {
+                showError('File size must be less than 16MB');
+                return;
+            }
+
+            uploadFile(file);
+        }
+
+        function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Hide messages
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+
+            // Show progress
+            progressContainer.style.display = 'block';
+            progressFill.style.width = '0%';
+            progressText.textContent = 'Uploading...';
+
+            // Simulate progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90;
+                progressFill.style.width = progress + '%';
+            }, 500);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    clearInterval(progressInterval);
+
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+
+                    // Complete progress
+                    progressFill.style.width = '100%';
+                    progressText.textContent = 'Translation complete! Downloading...';
+
+                    // Download file
+                    setTimeout(() => {
+                        window.location.href = data.download_url;
+                        progressContainer.style.display = 'none';
+
+                        showSuccess('Translation successful! Your file is downloading.');
+
+                        // Reset after download
+                        setTimeout(() => {
+                            successMessage.style.display = 'none';
+                            fileInput.value = '';
+                        }, 5000);
+                    }, 1000);
+                })
+                .catch(error => {
+                    clearInterval(progressInterval);
+                    progressContainer.style.display = 'none';
+                    showError(error.message || 'An error occurred during translation');
+                });
+        }
+
+        function showError(message) {
+            errorMessage.textContent = '❌ ' + message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = '✅ ' + message;
+            successMessage.style.display = 'block';
+        }
+    </script>
+</body>
+
+</html>
