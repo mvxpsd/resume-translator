@@ -215,5 +215,36 @@ The web interface features:
 - **Glassmorphism card** with blur effects
 - **Large upload zone** with drag-and-drop
 
-- **Progress bar** during translation
 - **Feature list** below the main card
+
+---
+
+## 🚀 Future Roadmap: Local AI Translation
+
+To upgrade from Google Translate (online) to a **Private, Offline, Unlimited** translation engine, use Hugging Face Transformers.
+
+### 1. Install Dependencies
+This requires ~1GB of disk space and reasonable RAM.
+```bash
+venv/bin/pip install transformers torch sentencepiece sacremoses
+```
+
+### 2. Implementation Guide
+In `app.py`, replace `deep_translator` with:
+
+```python
+from transformers import pipeline
+
+# Initialize pipeline (downloads ~300MB model on first run)
+translator_pipe = pipeline("translation", model="Helsinki-NLP/opus-mt-fr-en")
+
+def translate_batch_local(text_list):
+    # Returns: [{'translation_text': '...'}]
+    results = translator_pipe(text_list)
+    return [r['translation_text'] for r in results]
+```
+
+**Benefits:**
+- 🛡️ **Zero Privacy Risk**: Data never leaves the server.
+- ⚡ **No Rate Limits**: Translate millions of lines without bans.
+- 🔌 **Offline**: Works without internet.

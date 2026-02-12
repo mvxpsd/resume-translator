@@ -35,9 +35,9 @@ echo ""
 echo "✅ Starting Gunicorn server..."
 echo "📍 Web app will be available at: http://localhost:5000"
 echo "   - 4 concurrent workers"
-echo "   - 120s timeout"
+echo "   - 300s timeout"
 echo "Press CTRL+C to stop the server"
 echo ""
 
 # Use exec to replace the shell process
-exec venv/bin/gunicorn -w 4 -b 0.0.0.0:5000 --timeout 120 --access-logfile - --error-logfile - app:app
+exec venv/bin/gunicorn -w 4 -b 0.0.0.0:5000 --timeout 300 --access-logfile - --error-logfile - app:app

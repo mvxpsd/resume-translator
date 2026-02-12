@@ -25,3 +25,7 @@
 - [x] Integrate persistent upload logging for audit
 - [x] Secure application by disabling debug mode and using safe file paths
 - [x] Document deployment options (ngrok) in walkthrough
+- [x] Optimize translation with batching to prevent timeouts
+
+## Future Improvements (Backlog)
+- [ ] Implement local AI translation using Hugging Face Transformers (Offline, No Rate Limits)

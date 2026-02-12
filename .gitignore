@@ -6,3 +6,6 @@ __pycache__/
 *.pdf
 temp_doc.xml
 .DS_Store
+uploads/
+uploads.log
+*.log

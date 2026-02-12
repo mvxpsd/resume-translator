@@ -36,7 +36,7 @@ def cleanup_old_files():
     """Delete files older than 60 seconds for privacy"""
     try:
         now = time.time()
-        cutoff = 60  # 1 minute retention
+        cutoff = 3600  # 60 minutes retention
         count = 0
         for f in os.listdir(UPLOAD_FOLDER):
             path = os.path.join(UPLOAD_FOLDER, f)
@@ -173,23 +173,31 @@ def extract_strings(source_docx, output_json):
         try:
             translator = GoogleTranslator(source='fr', target='en')
             
-            # process in chunks to show progress/avoid timeouts
-            for i, s in enumerate(missing_strings):
+            # Process in batches to improve performance and avoid timeouts
+            batch_size = 10
+            for i in range(0, len(missing_strings), batch_size):
+                batch = missing_strings[i:i + batch_size]
                 try:
-                    # preserve leading/trailing whitespace if needed, but usually stripped for translation
-                    translated = translator.translate(s.strip())
+                    # Translate batch
+                    logger.info(f"Translating batch {i//batch_size + 1}/{(len(missing_strings)-1)//batch_size + 1}")
+                    translations = translator.translate_batch(batch)
                     
-                    # consistency check
-                    if translated:
-                        # Restore original whitespace pattern if possible? 
-                        # For now, just map string to translated
-                        mapping[s] = translated
-                        master_lib[s] = translated
-                    else:
-                        mapping[s] = s
+                    # Update mapping and master lib
+                    for original, translated in zip(batch, translations):
+                        if translated:
+                            mapping[original] = translated
+                            master_lib[original] = translated
+                        else:
+                            mapping[original] = original
+                            
+                    # Small delay to respect rate limits
+                    time.sleep(2)
+                    
                 except Exception as e:
-                    print(f"Translation failed for '{s[:20]}...': {e}")
-                    mapping[s] = s
+                    logger.error(f"Batch translation failed: {e}")
+                    # Fallback: keep original string
+                    for s in batch:
+                        mapping[s] = s
             
             # Save updated master library
             save_master_library(MASTER_LIBRARY, master_lib)
