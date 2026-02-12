@@ -1,106 +1,77 @@
-# Resume Translator Web App
+# Professional Resume Translator 🚀
 
-A web application that translates French resumes to English while preserving all formatting, fonts, and styles.
+A robust, production-ready tool to translate French resumes to English while perfectly preserving formatting, styles, and layouts.
 
-## Features
+## ✨ Key Features
 
-- 📁 **Drag & Drop Upload** - Easy file upload interface
-- 🎨 **Format Preservation** - Maintains all fonts, tables, and layouts
-- 📄 **Word Output** - Get professionally formatted DOCX
-- 🚀 **Fast Translation** - Uses AI-powered incremental learning
-- 🔒 **Secure** - All processing happens locally
+- 📁 **Seamless DOCX Translation**: Maintains all fonts, tables, and complex layouts.
+- ⚡ **AI-Powered Batching**: Efficiently translates large documents using batch processing to avoid API limits.
+- 📚 **Smart Library System**: 500+ pre-filled technical terms (Data Engineering, Management, IT) for instant, accurate mapping.
+- 🌐 **Web & CLI Interfaces**: Choose between a premium web app or a powerful command-line tool.
+- 🪟 **Windows Native Support**: Includes dedicated `.bat` files for easy use on Windows without a terminal.
+- 🔒 **Privacy Focused**: Automatic file cleanup and secure processing logic.
 
-## Setup
+---
 
-### Prerequisites
+## 🛠️ Setup & Installation
 
-- Python 3.x
-
-### Installation
-
-**Option 1: System Package (Recommended for Ubuntu 24.04)**
-```bash
-sudo apt update
-sudo apt install python3-flask
-```
-
-**Option 2: Virtual Environment**
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install flask
-```
-
-**Verify the master library exists**:
-```bash
-ls /mnt/d/master_library.json
-```
-If it doesn't exist, the app will create it automatically.
-
-## Running the Application
-
-1. **Start the Flask server**:
+### For Linux / WSL (Ubuntu)
+1. **Prepare the environment**:
    ```bash
-   cd /mnt/d
-   python3 app.py
+   chmod +x setup_requirements.sh
+   ./setup_requirements.sh
+   ```
+2. **Start the server**:
+   ```bash
+   ./start_server.sh
    ```
 
-2. **Open your browser** and navigate to:
-   ```
-   http://localhost:5000
-   ```
+### For Windows
+1. **Initialize**: Double-click on `setup_windows.bat`.
+2. **Translate**: Drag and drop any `.docx` file onto `run_cli_windows.bat`.
 
-3. **Upload your French resume** (DOCX format)
+---
 
-4. **Download** your translated file (automatically downloads as DOCX)
+## 🚀 Usage Guide
 
-## File Structure
+### 1. Web Application
+- **URL**: [http://localhost:5000](http://localhost:5000)
+- Simply drag and drop your French resume.
+- The app will automatically handle extraction, batch translation via Google Translate AI, and document generation.
+- Click **Download** to get your professionally formatted English CV.
 
-```
-/mnt/d/
-├── app.py                      # Flask backend
-├── static/
-│   ├── index.html             # Frontend UI
-│   └── style.css              # Styling
-├── master_library.json        # Translation knowledge base
-├── run_translation_pipeline.py # CLI translation tool
-└── requirements.txt           # Python dependencies
-```
-
-## How It Works
-
-1. **Upload**: User uploads a French DOCX resume
-2. **Extract**: System extracts all text from the document
-3. **Translate**: Applies translations from the master library
-4. **Generate**: Creates English DOCX
-5. **Download**: Returns translated file
-
-## Troubleshooting
-
-### Flask not installed
+### 2. Command Line (CLI)
+For fast, automatic translation from your terminal:
 ```bash
-sudo apt install python3-pip
-pip3 install flask
+./venv/bin/python3 run_translation_pipeline.py "path/to/resume.docx"
 ```
 
+### 3. Windows Native (No terminal)
+- Drag your French CV and drop it directly onto the **`run_cli_windows.bat`** file in your explorer.
 
+---
 
-### Port 5000 already in use
-Change the port in `app.py`:
-```python
-app.run(debug=True, host='0.0.0.0', port=8080)
-```
+## 📂 Project Structure
 
-## CLI Alternative
+- `app.py`: Flask production server with automatic cleanup and logging.
+- `master_library.json`: The "brain" of the app containing 500+ professional mappings.
+- `run_translation_pipeline.py`: Pure Python engine for CLI translation.
+- `start_server.sh`: Production startup script using **Gunicorn** (4 workers, 300s timeout).
+- `static/`: Frontend assets (modern UI with glassmorphism).
+- `setup_windows.bat` & `run_cli_windows.bat`: Windows integration scripts.
 
-You can also use the command-line tool:
-```bash
-python3 run_translation_pipeline.py your_resume_FR.docx
-```
+---
 
-## Notes
+## 🛡️ Production Hardening
+- **Server**: Uses Gunicorn for concurrency and stability.
+- **Timeout**: Increased to 300s to handle massive AI translation tasks.
+- **Cleanup**: Uploaded files and maps are automatically deleted after 60 seconds.
+- **Audit**: All actions are logged in `uploads.log`.
 
-- Maximum file size: 16MB
-- Supported format: DOCX only
-- The master library grows with each translation
-- Temporary files are automatically cleaned up
+## 🗺️ Future Roadmap
+- [ ] **Local AI Translation**: Move from Google Translate API to offline Hugging Face Transformers.
+- [ ] **Multi-language Support**: Add French to German, Spanish, etc.
+- [ ] **PDF Direct Extraction**: Improve support for non-selectable PDF layers.
+
+---
+*Created by Papa Samba Diop - Optimized for Professional Engineering & Management Resumes.*

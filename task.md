@@ -24,7 +24,7 @@
 - [x] Implement temporary file cleanup (security & disk usage)
 - [x] Integrate persistent upload logging for audit
 - [x] Secure application by disabling debug mode and using safe file paths
-- [x] Document deployment options (ngrok) in walkthrough
+- [x] Document usage, installation, and deployment procedures in README.md and walkthrough.md
 - [x] Optimize translation with batching to prevent timeouts
 
 ## Future Improvements (Backlog)
