@@ -15,10 +15,22 @@ if not exist "venv_win" (
     python -m venv venv_win
 )
 
-:: Install Dependencies
+:: Activate Virtual Environment and Install Dependencies
 echo ⬇️ Installing dependencies...
 call venv_win\Scripts\activate
-pip install -r requirements.txt
+
+if exist "requirements.txt" (
+    pip install -r requirements.txt
+) else (
+    echo ⚠️ requirements.txt not found. Creating default...
+    (
+        echo flask
+        echo werkzeug
+        echo deep-translator
+        echo gunicorn
+    ) > requirements.txt
+    pip install -r requirements.txt
+)
 
 echo.
 echo ✅ Setup complete! 
