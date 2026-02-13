@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0"
 echo 🚀 Initializing Resume Translator for Windows...
 
 :: Check if Python is installed
