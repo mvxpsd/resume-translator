@@ -7,7 +7,14 @@ import sys
 import argparse
 import time
 import logging
-from deep_translator import GoogleTranslator
+
+# Check for dependencies and provide friendly error
+try:
+    from deep_translator import GoogleTranslator
+except ImportError:
+    print("❌ Error: 'deep-translator' library not found.")
+    print("Please run 'setup_requirements.sh' (Linux) or 'setup_windows.bat' (Windows) first.")
+    sys.exit(1)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -20,23 +27,31 @@ def load_master_library(library_path):
         try:
             with open(library_path, 'r', encoding='utf-8') as f:
                 return json.load(f)
-        except:
+        except Exception as e:
+            logger.warning(f"Could not load library: {e}")
             return {}
     return {}
 
 def save_master_library(library_path, data):
+    """Saves non-empty translations back to the master library"""
     clean_data = {k: v for k, v in data.items() if isinstance(v, str) and v.strip() != ""}
-    with open(library_path, 'w', encoding='utf-8') as f:
-        json.dump(clean_data, f, indent=4, ensure_ascii=False)
+    try:
+        with open(library_path, 'w', encoding='utf-8') as f:
+            json.dump(clean_data, f, indent=4, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"Failed to save library: {e}")
 
 def translate_docx(source_docx, translation_map, output_docx):
-    """Translate DOCX file using the translation map"""
+    """Translate DOCX file using the translation map while preserving XML structure"""
     def sub_xml(content, trans_map):
         xml_str = content.decode('utf-8')
         def replace_para(match):
             para_xml = match.group(0)
+            # Find all text content within the paragraph
             t_contents = re.findall(r'<w:t[^>]*>([^<]*)</w:t>', para_xml)
             para_text = "".join(t_contents)
+            
+            # Look for translation (exact match or stripped)
             translation = trans_map.get(para_text) or trans_map.get(para_text.strip())
             
             if translation and isinstance(translation, str) and translation.strip() != "":
@@ -45,70 +60,91 @@ def translate_docx(source_docx, translation_map, output_docx):
                     tag_start = t_match.group(1)
                     if state['first']:
                         state['first'] = False
-                        # Basic XML escaping
+                        # Basic XML escaping for special characters
                         safe = translation.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&apos;')
                         return f'<w:t{tag_start}>{safe}</w:t>'
+                    # Clear subsequent text tags in the same paragraph to avoid duplicates
                     return f'<w:t{tag_start}></w:t>'
                 return re.sub(r'<w:t([^>]*)>([^<]*)</w:t>', sub_t, para_xml)
             return para_xml
+        
+        # Process each paragraph
         return re.sub(r'<w:p\b[^>]*>.*?</w:p>', replace_para, xml_str, flags=re.DOTALL).encode('utf-8')
 
     target_pattern = re.compile(r'word/(document|header|footer)\d*\.xml')
-    with zipfile.ZipFile(source_docx, 'r') as zin, zipfile.ZipFile(output_docx, 'w', zipfile.ZIP_DEFLATED) as zout:
-        for info in zin.infolist():
-            content = zin.read(info.filename)
-            if target_pattern.match(info.filename):
-                zout.writestr(info.filename, sub_xml(content, translation_map))
-            else:
-                zout.writestr(info, content)
+    try:
+        with zipfile.ZipFile(source_docx, 'r') as zin, zipfile.ZipFile(output_docx, 'w', zipfile.ZIP_DEFLATED) as zout:
+            for info in zin.infolist():
+                content = zin.read(info.filename)
+                if target_pattern.match(info.filename):
+                    zout.writestr(info.filename, sub_xml(content, translation_map))
+                else:
+                    zout.writestr(info, content)
+    except Exception as e:
+        logger.error(f"DOCX translation failed: {e}")
 
 def process_translation(source_docx):
     """Main process: Extract -> AI Translate -> Generate DOCX"""
+    # Ensure absolute path for source because we might change CWD
+    source_docx = os.path.abspath(source_docx)
+    
     if not os.path.exists(source_docx):
-        print(f"Error: File not found: {source_docx}")
+        print(f"❌ Error: File not found: {source_docx}")
         return
 
-    # 1. Extract strings
+    # Set working directory to script location to find master_library.json
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(script_dir)
+
+    # 1. Extract strings from DOCX
     target_pattern = re.compile(r'word/(document|header|footer)\d*\.xml')
     unique_strings = []
     master_lib = load_master_library(MASTER_LIBRARY)
 
-    print(f"Reading {source_docx}...")
-    with zipfile.ZipFile(source_docx, 'r') as z:
-        for info in z.infolist():
-            if target_pattern.match(info.filename):
-                content = z.read(info.filename).decode('utf-8')
-                paragraphs = re.findall(r'<w:p\b[^>]*>.*?</w:p>', content, flags=re.DOTALL)
-                for para in paragraphs:
-                    t_contents = re.findall(r'<w:t[^>]*>([^<]*)</w:t>', para)
-                    para_text = "".join(t_contents).strip()
-                    if para_text and para_text not in unique_strings:
-                        unique_strings.append(para_text)
+    print(f"📖 Reading {os.path.basename(source_docx)}...")
+    try:
+        with zipfile.ZipFile(source_docx, 'r') as z:
+            for info in z.infolist():
+                if target_pattern.match(info.filename):
+                    content = z.read(info.filename).decode('utf-8')
+                    paragraphs = re.findall(r'<w:p\b[^>]*>.*?</w:p>', content, flags=re.DOTALL)
+                    for para in paragraphs:
+                        t_contents = re.findall(r'<w:t[^>]*>([^<]*)</w:t>', para)
+                        para_text = "".join(t_contents).strip()
+                        if para_text and para_text not in unique_strings:
+                            unique_strings.append(para_text)
+    except Exception as e:
+        print(f"❌ Error reading DOCX: {e}")
+        return
     
-    # 2. Map existing and find missing
+    # 2. Map existing translations and identify missing ones
     mapping = {}
     missing_strings = []
     for s in unique_strings:
         clean_s = s.strip()
         if not clean_s: continue
+        
+        # Check library (exact or stripped)
         trans = master_lib.get(s) or master_lib.get(clean_s)
+        
         if trans:
             mapping[s] = trans
         else:
+            # Skip numbers/symbols from translation
             if clean_s.replace('.', '').replace(',', '').isdigit() or len(clean_s) < 2:
                 mapping[s] = s
             else:
                 missing_strings.append(s)
 
-    # 3. AI Translation for missing
+    # 3. AI Translation for missing strings
     if missing_strings:
-        print(f"Translating {len(missing_strings)} new strings via AI...")
+        print(f"🤖 Translating {len(missing_strings)} new strings via AI...")
         try:
             translator = GoogleTranslator(source='fr', target='en')
-            batch_size = 10
+            batch_size = 10 # Batching to respect API limits
             for i in range(0, len(missing_strings), batch_size):
                 batch = missing_strings[i:i + batch_size]
-                print(f"  Processing batch {i//batch_size + 1}/{(len(missing_strings)-1)//batch_size + 1}")
+                print(f"  ⏳ Processing batch {i//batch_size + 1}/{(len(missing_strings)-1)//batch_size + 1}")
                 try:
                     translations = translator.translate_batch(batch)
                     for original, translated in zip(batch, translations):
@@ -117,30 +153,33 @@ def process_translation(source_docx):
                             master_lib[original] = translated
                         else:
                             mapping[original] = original
-                    time.sleep(2) # Delay to avoid rate limits
+                    time.sleep(2) # Anti-ban delay
                 except Exception as e:
-                    print(f"  Batch failed: {e}")
+                    print(f"  ⚠️ Batch failed: {e}")
                     for s in batch: mapping[s] = s
             
             save_master_library(MASTER_LIBRARY, master_lib)
-            print("Master library updated.")
+            print("✨ Master library updated with new knowledge.")
         except Exception as e:
-            print(f"Translation error: {e}")
+            print(f"❌ Translation service error: {e}")
             for s in missing_strings: mapping[s] = s
 
     # 4. Generate Output DOCX
-    base_name = os.path.splitext(source_docx)[0]
-    output_docx = f"{base_name}_EN.docx"
-    print(f"Generating translated document: {output_docx}...")
+    base_name, _ = os.path.splitext(source_docx)
+    # Handle the _FR suffix if present
+    if re.search(r'[_.-]FR$', base_name, re.I):
+        output_base = re.sub(r'([_.-])FR$', r'\1EN', base_name, flags=re.I)
+    else:
+        output_base = f"{base_name}_EN"
+        
+    output_docx = f"{output_base}.docx"
+    print(f"💾 Generating output: {os.path.basename(output_docx)}...")
     translate_docx(source_docx, mapping, output_docx)
-    print("Success! Translation complete.")
+    print("✅ Success! Translation complete.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Professional Resume Translator CLI")
     parser.add_argument("source", help="Path to French DOCX file")
     args = parser.parse_args()
-    
-    # Ensure we are in the directory of the script to find master_library.json
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
     process_translation(args.source)
