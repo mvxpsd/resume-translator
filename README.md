@@ -1,77 +1,99 @@
 # Professional Resume Translator 🚀
 
-A robust, production-ready tool to translate French resumes to English while perfectly preserving formatting, styles, and layouts.
-
-## ✨ Key Features
-
-- 📁 **Seamless DOCX Translation**: Maintains all fonts, tables, and complex layouts.
-- ⚡ **AI-Powered Batching**: Efficiently translates large documents using batch processing to avoid API limits.
-- 📚 **Smart Library System**: 500+ pre-filled technical terms (Data Engineering, Management, IT) for instant, accurate mapping.
-- 🌐 **Web & CLI Interfaces**: Choose between a premium web app or a powerful command-line tool.
-- 🪟 **Windows Native Support**: Includes dedicated `.bat` files for easy use on Windows without a terminal.
-- 🔒 **Privacy Focused**: Automatic file cleanup and secure processing logic.
+A robust, production-ready ecosystem designed to translate French resumes to English while perfectly preserving complex layouts, tables, and formatting.
 
 ---
 
-## 🛠️ Setup & Installation
+## 🏗️ System Architecture
 
-### For Linux / WSL (Ubuntu)
-1. **Prepare the environment**:
-   ```bash
-   chmod +x setup_requirements.sh
-   ./setup_requirements.sh
-   ```
-2. **Start the server**:
-   ```bash
-   ./start_server.sh
-   ```
+Our platform uses a **three-layered** approach to ensure the highest quality results:
 
-### For Windows
-1. **Initialize**: Double-click on `setup_windows.bat`.
-2. **Translate**: Drag and drop any `.docx` file onto `run_cli_windows.bat`.
-
----
-
-## 🚀 Usage Guide
-
-### 1. Web Application
-- **URL**: [http://localhost:5000](http://localhost:5000)
-- Simply drag and drop your French resume.
-- The app will automatically handle extraction, batch translation via Google Translate AI, and document generation.
-- Click **Download** to get your professionally formatted English CV.
-
-### 2. Command Line (CLI)
-For fast, automatic translation from your terminal:
-```bash
-./venv/bin/python3 run_translation_pipeline.py "path/to/resume.docx"
+```mermaid
+graph TD
+    A[Source DOCX] --> B{Extraction Engine}
+    B --> C[Master Library Match]
+    C -- Local Match --> D[Instant Translation]
+    C -- No Match --> E[AI Batch Translation]
+    E --> F[Learning: Update Library]
+    D --> G{DOCX Rebuilder}
+    F --> G
+    G --> H[Final Translated DOCX]
 ```
 
-### 3. Windows Native (No terminal)
-- Drag your French CV and drop it directly onto the **`run_cli_windows.bat`** file in your explorer.
+---
+
+## ⚡ The 3 Translation Options
+
+Regardless of the option you choose, the translation logic remains consistent, utilizing our **Smart Library** (500+ pre-filled terms) and **AI Batching**.
+
+### 1. Modern Web Application (Linux/WSL)
+*Best for: Users who prefer a visual, interactive experience.*
+
+**Visual Preview:**
+> The web interface features a **Glassmorphism Design** with smooth purple/blue gradients. It includes a central drag-and-drop zone and a real-time progress tracker.
+
+**Steps:**
+1.  **Initialize**: Run `./setup_requirements.sh` (installs Flask, Gunicorn, and dependencies).
+2.  **Launch**: Run `./start_server.sh`.
+3.  **Use**: Open `http://localhost:5000` in your browser.
+4.  **Action**: Drag your French DOCX onto the screen. The translated file will download automatically once the AI finishes.
+
+---
+
+### 2. Command Line Interface - CLI (Linux/WSL)
+*Best for: Developers, power users, and automation.*
+
+**Features:**
+- **Automatic detection**: Identifies new strings and handles AI translation without user input.
+- **Detailed Logging**: See the progress of AI batches in your terminal.
+- **Absolute Path Support**: No matter where you are, the script finds its library.
+
+**Commands:**
+```bash
+./venv/bin/python3 run_translation_pipeline.py "/path/to/resume_FR.docx"
+```
+*The output file will be created in the same folder as the source.*
+
+---
+
+### 3. Windows Native "No-Terminal" (Drag & Drop)
+*Best for: Users on a standard Windows PC without WSL or terminal knowledge.*
+
+**Visual Preview:**
+> Simply look for a file with a gear icon or a command prompt icon named `run_cli_windows`.
+
+**Steps:**
+1.  **First Time Setup**: Double-click **`setup_windows.bat`**. This creates a private Windows environment (`venv_win`).
+2.  **Translation**: Drag any French `.docx` file and drop it directly onto the **`run_cli_windows.bat`** file.
+3.  **Result**: A console window will pop up showing the progress and will close automatically when the new CV is ready.
 
 ---
 
 ## 📂 Project Structure
 
-- `app.py`: Flask production server with automatic cleanup and logging.
-- `master_library.json`: The "brain" of the app containing 500+ professional mappings.
-- `run_translation_pipeline.py`: Pure Python engine for CLI translation.
-- `start_server.sh`: Production startup script using **Gunicorn** (4 workers, 300s timeout).
-- `static/`: Frontend assets (modern UI with glassmorphism).
-- `setup_windows.bat` & `run_cli_windows.bat`: Windows integration scripts.
+| File | Description |
+| :--- | :--- |
+| **`app.py`** | Production Flask server with Gunicorn support. |
+| **`run_translation_pipeline.py`** | The automated core translation engine. |
+| **`master_library.json`** | Cleaned knowledge base with 500+ professional terms. |
+| **`start_server.sh`** | High-performance runner (4 workers, 300s timeout). |
+| **`setup_windows.bat`** | One-click environment builder for Windows. |
+| **`run_cli_windows.bat`** | The Drag-and-Drop runner for Windows. |
 
 ---
 
-## 🛡️ Production Hardening
-- **Server**: Uses Gunicorn for concurrency and stability.
-- **Timeout**: Increased to 300s to handle massive AI translation tasks.
-- **Cleanup**: Uploaded files and maps are automatically deleted after 60 seconds.
-- **Audit**: All actions are logged in `uploads.log`.
+## 🛡️ Production Hardening & Privacy
 
-## 🗺️ Future Roadmap
-- [ ] **Local AI Translation**: Move from Google Translate API to offline Hugging Face Transformers.
-- [ ] **Multi-language Support**: Add French to German, Spanish, etc.
-- [ ] **PDF Direct Extraction**: Improve support for non-selectable PDF layers.
+- **Concurrency**: Powered by **Gunicorn** to handle multiple concurrent tasks.
+- **Timeout Protection**: 300-second timeout ensures even the largest CVs finish translating.
+- **Security**: Uploaded files and maps are automatically deleted after **60 seconds** to protect your privacy.
+- **Audit Logging**: Every action is recorded in `uploads.log`.
 
 ---
-*Created by Papa Samba Diop - Optimized for Professional Engineering & Management Resumes.*
+
+## 🗺️ Roadmap
+- [ ] **Offline AI**: Migration to Hugging Face Transformers for 100% local translation.
+- [ ] **PDF Support**: Direct PDF-to-PDF translation layout preservation.
+
+---
+*Developed by Papa Samba Diop - Tailored for Professional Engineering and Management Profiles.*
