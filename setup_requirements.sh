@@ -1,40 +1,45 @@
 #!/bin/bash
 
-# Setup requirements for Resume Translation Pipeline
-
-echo "Checking system requirements..."
+# Setup requirements for Resume Translation Web App
+echo "🚀 Setting up environment for Resume Translator..."
 
 # 1. Check Python 3
 if command -v python3 &>/dev/null; then
     echo "[OK] Python 3 is installed."
 else
-    echo "[ERROR] Python 3 is not found. Please install it using: sudo apt update && sudo apt install python3"
+    echo "[ERROR] Python 3 is not found. Please install it: sudo apt update && sudo apt install python3"
     exit 1
 fi
 
-# 2. Check PowerShell (needed for Word-to-PDF conversion on Windows/WSL)
-if command -v powershell.exe &>/dev/null; then
-    echo "[OK] PowerShell (Windows) is available via WSL."
-else
-    echo "[WARNING] powershell.exe not found. PDF conversion will not work, though DOCX translation will still function."
-fi
-
-# 3. Handle Python Pip (not strictly needed for my custom script, but good to have)
-if command -v pip3 &>/dev/null; then
-    echo "[OK] Pip is installed."
-else
-    echo "Pip is missing. Attempting to install pip..."
+# 2. Check Pip
+if ! command -v pip3 &>/dev/null; then
+    echo "Pip is missing. Installing pip..."
     sudo apt update && sudo apt install -y python3-pip
 fi
 
-# 4. Final verification of the translation script dependencies
-# Note: The current pipeline script uses ONLY built-in Python libraries 
-# (zipfile, json, re, os, subprocess, xml.etree.ElementTree)
-echo ""
-echo "Setup complete! No external Python libraries are required."
-echo "You can run the translator using:"
-echo "  python3 /mnt/d/run_translation_pipeline.py"
-echo ""
-echo "Or specify a different file:"
-echo "  python3 /mnt/d/run_translation_pipeline.py /path/to/resume_FR.docx"
+# 3. Create Virtual Environment
+if [ ! -d "venv" ]; then
+    echo "📦 Creating virtual environment..."
+    python3 -m venv venv
+fi
 
+# 4. Install Dependencies
+echo "⬇️ Installing dependencies from requirements.txt..."
+if [ -f "requirements.txt" ]; then
+    ./venv/bin/pip install -r requirements.txt
+    echo "[OK] Dependencies installed successfully."
+else
+    echo "[ERROR] requirements.txt not found!"
+    echo "Creating a default requirements.txt..."
+    cat > requirements.txt << EOF
+flask
+werkzeug
+deep-translator
+gunicorn
+EOF
+    ./venv/bin/pip install -r requirements.txt
+fi
+
+echo ""
+echo "✅ Setup complete!"
+echo "You can now start the server with: ./start_server.sh"
