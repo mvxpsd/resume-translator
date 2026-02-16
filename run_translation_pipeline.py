@@ -41,6 +41,58 @@ def save_master_library(library_path, data):
     except Exception as e:
         logger.error(f"Failed to save library: {e}")
 
+def detect_language(text_segments):
+    """
+    Heuristic language detection based on keyword frequency.
+    Returns: 'fr' or 'en'
+    """
+    # Join first ~1000 chars to analyze
+    sample_text = " ".join(text_segments)[:2000].lower()
+    
+    fr_signals = ["expérience", "formation", "compétences", "langues", "résumé", "janvier", "février", "août", "juillet", "décembre", "mars", "avril", "mai", "juin", "septembre", "octobre", "novembre", "actuel", "aujourd'hui"]
+    en_signals = ["experience", "education", "skills", "languages", "summary", "january", "february", "august", "july", "december", "march", "april", "may", "june", "september", "october", "november", "current", "present"]
+    
+    fr_score = sum(sample_text.count(s) for s in fr_signals)
+    en_score = sum(sample_text.count(s) for s in en_signals)
+    
+    # Check simple words if scores are tied or zero
+    if fr_score == 0 and en_score == 0:
+        if " et " in sample_text or " le " in sample_text or " la " in sample_text:
+            return 'fr'
+        if " and " in sample_text or " the " in sample_text:
+            return 'en'
+            
+    if en_score > fr_score:
+        return 'en'
+    return 'fr'
+
+def is_safe_to_save(text):
+    """
+    Sanitization filter: Returns True if the text is generic enough to be saved in the library.
+    Returns False for PII, specific dates, or long sentences.
+    """
+    text = text.strip()
+    if not text: return False
+    
+    # 1. Exclude too long strings (Sentences)
+    if len(text.split()) > 5:
+        return False
+        
+    # 2. Exclude PII patterns
+    # Email
+    if re.search(r'\S+@\S+', text): return False
+    # URL
+    if re.search(r'http[s]?://', text) or re.search(r'www\.', text): return False
+    # Phone numbers (loose check for digits)
+    if sum(c.isdigit() for c in text) > 3: return False
+    
+    # 3. Exclude Specific Entities usually containing many numbers
+    # Dates often contain digits (2024, 12/02), Addresses (123 St)
+    if any(char.isdigit() for char in text):
+        return False
+        
+    return True
+
 def translate_docx(source_docx, translation_map, output_docx):
     """Translate DOCX file using the translation map while preserving XML structure"""
     def sub_xml(content, trans_map):
@@ -84,7 +136,7 @@ def translate_docx(source_docx, translation_map, output_docx):
         logger.error(f"DOCX translation failed: {e}")
 
 def process_translation(source_docx):
-    """Main process: Extract -> AI Translate -> Generate DOCX"""
+    """Main process: Extract -> Detect Lang -> Translate (Bidirectional) -> Generate DOCX"""
     # Ensure absolute path for source because we might change CWD
     source_docx = os.path.abspath(source_docx)
     
@@ -99,8 +151,7 @@ def process_translation(source_docx):
     # 1. Extract strings from DOCX
     target_pattern = re.compile(r'word/(document|header|footer)\d*\.xml')
     unique_strings = []
-    master_lib = load_master_library(MASTER_LIBRARY)
-
+    
     print(f"📖 Reading {os.path.basename(source_docx)}...")
     try:
         with zipfile.ZipFile(source_docx, 'r') as z:
@@ -117,18 +168,45 @@ def process_translation(source_docx):
         print(f"❌ Error reading DOCX: {e}")
         return
     
-    # 2. Map existing translations and identify missing ones
+    # 2. Detect Language
+    detected_lang = detect_language(unique_strings)
+    if detected_lang == 'fr':
+        target_lang = 'en'
+        print("🇫🇷 Detected language: French -> Target: English")
+    else:
+        target_lang = 'fr'
+        print("🇬🇧 Detected language: English -> Target: French")
+
+    # 3. Load Library & Prepare Reverse Lookup if needed
+    master_lib = load_master_library(MASTER_LIBRARY)
+    
+    # If translating EN -> FR, we need to reverse the library (Value matches Key)
+    # Master Lib Structure: { "French": "English" }
+    current_library = {} 
+    
+    if detected_lang == 'fr':
+        # FR -> EN: Use library as is
+        current_library = master_lib
+    else:
+        # EN -> FR: Create reverse map { "English": "French" }
+        # Only reverse unique values to avoid collision (last write wins, acceptable for heuristic)
+        current_library = {v: k for k, v in master_lib.items() if v and isinstance(v, str)}
+
+    # 4. Map existing translations and identify missing ones
     mapping = {}
     missing_strings = []
+    found_in_lib = 0
+    
     for s in unique_strings:
         clean_s = s.strip()
         if not clean_s: continue
         
         # Check library (exact or stripped)
-        trans = master_lib.get(s) or master_lib.get(clean_s)
+        trans = current_library.get(s) or current_library.get(clean_s)
         
         if trans:
             mapping[s] = trans
+            found_in_lib += 1
         else:
             # Skip numbers/symbols from translation
             if clean_s.replace('.', '').replace(',', '').isdigit() or len(clean_s) < 2:
@@ -136,12 +214,18 @@ def process_translation(source_docx):
             else:
                 missing_strings.append(s)
 
-    # 3. AI Translation for missing strings
+    print(f"📚 Found {found_in_lib} terms in Master Library.")
+
+    # 5. AI Translation for missing strings
     if missing_strings:
         print(f"🤖 Translating {len(missing_strings)} new strings via AI...")
         try:
-            translator = GoogleTranslator(source='fr', target='en')
-            batch_size = 10 # Batching to respect API limits
+            translator = GoogleTranslator(source=detected_lang, target=target_lang)
+            batch_size = 10 
+            
+            # Identify new knowledge to save (only safe terms)
+            new_knowledge = {}
+            
             for i in range(0, len(missing_strings), batch_size):
                 batch = missing_strings[i:i + batch_size]
                 print(f"  ⏳ Processing batch {i//batch_size + 1}/{(len(missing_strings)-1)//batch_size + 1}")
@@ -150,27 +234,52 @@ def process_translation(source_docx):
                     for original, translated in zip(batch, translations):
                         if translated:
                             mapping[original] = translated
-                            master_lib[original] = translated
+                            
+                            # SAFETY CHECK BEFORE SAVING
+                            if is_safe_to_save(original):
+                                if detected_lang == 'fr':
+                                    # Forward: original=FR, translated=EN
+                                    master_lib[original] = translated
+                                    new_knowledge[original] = translated
+                                else:
+                                    # Reverse: original=EN, translated=FR
+                                    # Store as {FR: EN} to maintain library consistency
+                                    master_lib[translated] = original
+                                    new_knowledge[translated] = original
                         else:
                             mapping[original] = original
-                    time.sleep(2) # Anti-ban delay
+                    time.sleep(2) 
                 except Exception as e:
                     print(f"  ⚠️ Batch failed: {e}")
                     for s in batch: mapping[s] = s
             
-            save_master_library(MASTER_LIBRARY, master_lib)
-            print("✨ Master library updated with new knowledge.")
+            # Save only if we learned something new and safe
+            if new_knowledge:
+                save_master_library(MASTER_LIBRARY, master_lib)
+                print(f"✨ Master library updated with {len(new_knowledge)} new generic terms.")
+            else:
+                print("🔒 No new verifiable terms saved to library (Sanitization active).")
+                
         except Exception as e:
             print(f"❌ Translation service error: {e}")
             for s in missing_strings: mapping[s] = s
 
-    # 4. Generate Output DOCX
+    # 6. Generate Output DOCX
     base_name, _ = os.path.splitext(source_docx)
-    # Handle the _FR suffix if present
-    if re.search(r'[_.-]FR$', base_name, re.I):
-        output_base = re.sub(r'([_.-])FR$', r'\1EN', base_name, flags=re.I)
+    
+    # Handle suffix swapping
+    if detected_lang == 'fr':
+        # ..._FR -> ..._EN
+        if re.search(r'[_.-]FR$', base_name, re.I):
+            output_base = re.sub(r'([_.-])FR$', r'\1EN', base_name, flags=re.I)
+        else:
+            output_base = f"{base_name}_EN"
     else:
-        output_base = f"{base_name}_EN"
+        # ..._EN -> ..._FR
+        if re.search(r'[_.-]EN$', base_name, re.I):
+            output_base = re.sub(r'([_.-])EN$', r'\1FR', base_name, flags=re.I)
+        else:
+            output_base = f"{base_name}_FR"
         
     output_docx = f"{output_base}.docx"
     print(f"💾 Generating output: {os.path.basename(output_docx)}...")
@@ -179,7 +288,7 @@ def process_translation(source_docx):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Professional Resume Translator CLI")
-    parser.add_argument("source", help="Path to French DOCX file")
+    parser.add_argument("source", help="Path to DOCX file")
     args = parser.parse_args()
     
     process_translation(args.source)
