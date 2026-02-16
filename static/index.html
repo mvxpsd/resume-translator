@@ -4,20 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resume Translator - French to English</title>
+    <title>Resume Translator - FR ↔ EN</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 
 <body>
     <div class="container">
         <div class="card">
-            <h1>📄 Resume Translator</h1>
-            <p class="subtitle">Transform your French resume to English while preserving all formatting</p>
+            <h1>🌍 Resume Translator</h1>
+            <p class="subtitle">Translate your resume between French and English while preserving all formatting</p>
 
             <div class="upload-zone" id="uploadZone">
                 <div class="upload-icon">📁</div>
-                <p class="upload-text">Drag & drop your French resume here</p>
-                <p class="upload-subtext">or click to browse</p>
+                <p class="upload-text">Drag & drop your resume here (🇫🇷 FR or 🇬🇧 EN)</p>
+                <p class="upload-subtext">Auto-detects language • Click to browse</p>
                 <input type="file" id="fileInput" accept=".docx" hidden>
             </div>
 
@@ -25,7 +25,7 @@
                 <div class="progress-bar">
                     <div class="progress-fill" id="progressFill"></div>
                 </div>
-                <p class="progress-text" id="progressText">Translating your resume...</p>
+                <p class="progress-text" id="progressText">Detecting language and translating...</p>
             </div>
 
             <div class="error-message" id="errorMessage" style="display: none;"></div>
@@ -35,11 +35,14 @@
         <div class="info-section">
             <h3>✨ Features</h3>
             <ul>
+                <li>🌍 Auto-detects French or English</li>
+                <li>🔄 Bidirectional translation (FR ↔ EN)</li>
                 <li>🎨 Preserves all formatting, fonts, and styles</li>
                 <li>📊 Maintains tables, charts, and layouts</li>
                 <li>🚀 Fast translation using AI-powered library</li>
                 <li>📥 Download translated DOCX format</li>
-                <li>🔒 Secure - files are processed locally</li>
+                <li>🔒 Secure - files auto-deleted after 60 seconds</li>
+                <li>🛡️ Privacy-first - personal data never stored</li>
             </ul>
         </div>
     </div>
