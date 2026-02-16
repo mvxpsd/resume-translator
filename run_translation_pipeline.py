@@ -189,8 +189,22 @@ def process_translation(source_docx):
         current_library = master_lib
     else:
         # EN -> FR: Create reverse map { "English": "French" }
-        # Only reverse unique values to avoid collision (last write wins, acceptable for heuristic)
         current_library = {v: k for k, v in master_lib.items() if v and isinstance(v, str)}
+
+    # Build normalized lookup for fuzzy matching (ignore trailing :;. and spaces)
+    norm_lookup = {}
+    for k, v in current_library.items():
+        nk = k.strip().rstrip(':;\u00a0. ').replace('\u00a0', ' ').strip()
+        if nk and nk not in norm_lookup:
+            norm_lookup[nk] = v
+
+    def fuzzy_lookup(text):
+        """Try exact match first, then normalized (strip trailing :;. and spaces)"""
+        result = current_library.get(text) or current_library.get(text.strip())
+        if result:
+            return result
+        norm = text.strip().rstrip(':;\u00a0. ').replace('\u00a0', ' ').strip()
+        return norm_lookup.get(norm)
 
     # 4. Map existing translations and identify missing ones
     mapping = {}
@@ -201,8 +215,8 @@ def process_translation(source_docx):
         clean_s = s.strip()
         if not clean_s: continue
         
-        # Check library (exact or stripped)
-        trans = current_library.get(s) or current_library.get(clean_s)
+        # Check library (exact then fuzzy)
+        trans = fuzzy_lookup(s)
         
         if trans:
             mapping[s] = trans
@@ -221,7 +235,7 @@ def process_translation(source_docx):
         print(f"🤖 Translating {len(missing_strings)} new strings via AI...")
         try:
             translator = GoogleTranslator(source=detected_lang, target=target_lang)
-            batch_size = 10 
+            batch_size = 30
             
             # Identify new knowledge to save (only safe terms)
             new_knowledge = {}
@@ -248,7 +262,7 @@ def process_translation(source_docx):
                                     new_knowledge[translated] = original
                         else:
                             mapping[original] = original
-                    time.sleep(2) 
+                    time.sleep(0.5)
                 except Exception as e:
                     print(f"  ⚠️ Batch failed: {e}")
                     for s in batch: mapping[s] = s

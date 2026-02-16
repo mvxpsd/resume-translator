@@ -218,6 +218,21 @@ def process_file_logic(source_docx, output_json):
         # Reverse Library for EN -> FR
         current_library = {v: k for k, v in master_lib.items() if v and isinstance(v, str)}
 
+    # Build normalized lookup for fuzzy matching (ignore trailing :;. and spaces)
+    norm_lookup = {}
+    for k, v in current_library.items():
+        nk = k.strip().rstrip(':;\u00a0. ').replace('\u00a0', ' ').strip()
+        if nk and nk not in norm_lookup:
+            norm_lookup[nk] = v
+
+    def fuzzy_lookup(text):
+        """Try exact match first, then normalized (strip trailing :;. and spaces)"""
+        result = current_library.get(text) or current_library.get(text.strip())
+        if result:
+            return result
+        norm = text.strip().rstrip(':;\u00a0. ').replace('\u00a0', ' ').strip()
+        return norm_lookup.get(norm)
+
     # 4. Map existing translations
     mapping = {}
     missing_strings = []
@@ -226,7 +241,7 @@ def process_file_logic(source_docx, output_json):
         clean_s = s.strip()
         if not clean_s: continue
         
-        trans = current_library.get(s) or current_library.get(clean_s)
+        trans = fuzzy_lookup(s)
         if trans:
             mapping[s] = trans
         else:
@@ -240,7 +255,7 @@ def process_file_logic(source_docx, output_json):
         logger.info(f"Translating {len(missing_strings)} new strings...")
         try:
             translator = GoogleTranslator(source=detected_lang, target=target_lang)
-            batch_size = 10
+            batch_size = 50
             new_knowledge = {}
 
             for i in range(0, len(missing_strings), batch_size):
@@ -265,7 +280,7 @@ def process_file_logic(source_docx, output_json):
                         else:
                             mapping[original] = original
                             
-                    time.sleep(2)
+                    time.sleep(0.5)
                     
                 except Exception as e:
                     logger.error(f"Batch translation failed: {e}")
