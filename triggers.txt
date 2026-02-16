@@ -1,0 +1,135 @@
+============================================================
+TRIGGERS - Template Keywords in Master Library
+(fuzzy match: ignores trailing :;. and spaces)
+============================================================
+
+--- FR Template -> Library Key (63) ---
+
+  AGILE  ->  AGILE
+  Anglais  ->  English
+  Année  ->  Year
+  Architectures  ->  Architectures
+  Autre langue… (spécifier)  ->  Another language... (specify)
+  AWS  ->  AWS
+  AZURE DATA FACTORY  ->  AZURE DATA FACTORY
+  AZURE DEVOPS  ->  AZURE DEVOPS
+  Bases de données  ->  Databases
+  Certifications  ->  Certifications
+  CI/CD  ->  CI/CD
+  Client  ->  Client
+  Diplôme obtenu  ->  Diploma obtained
+  Débutant/Intermédiaire/Avancé  ->  Beginner/Intermediate/Advanced
+  Efforts :  ->  Efforts:
+  ENTERPRISE ARCHITECT DE SPARX SYSTEMS  ->  ENTERPRISE ARCHITECT FROM SPARX SYSTEMS
+  Envergure :  ->  Scale:
+  Environnement technologique complet du mandat :  ->  Complete technological environment of the mandate:
+  Environnements et infrastructures  ->  Environments and Infrastructure
+  Fonction  ->  Position:
+  Fonction :  ->  Position:
+  Formation académique  ->  Education
+  Formations et perfectionnements  ->  Training and Professional Development
+  Frameworks, protocoles et bibliothèques  ->  Frameworks, Protocols, and Libraries
+  Français  ->  French
+  GESTION DE CERTIFICATS  ->  CERTIFICATE MANAGEMENT
+  GUIDE VERT  ->  GREEN GUIDE
+  IDMS (ENVIRONNEMENT CENTRAL)  ->  IDMS (CENTRAL ENVIRONMENT)
+  jours-personnes  ->  person-days
+  KANBAN  ->  KANBAN
+  Langages de programmation et progiciels  ->  Programming Languages and Software Packages
+  Langue  ->  Language
+  Langue maternelle  ->  Native Language
+  Langues parlées, écrites  ->  Spoken and written languages
+  LINUX SUR SITE  ->  LINUX ON-PREMISES
+  Mandat no :  ->  Project No.:
+  Mois  ->  Months
+  mois  ->  months
+  MYSQL  ->  MYSQL
+  Méthodologies  ->  Methodologies
+  Niveau de maîtrise  ->  Level of Proficiency
+  No  ->  No.
+  OLAP (CUBES ANALYTIQUES)  ->  OLAP (ANALYTICAL CUBES)
+  ORACLE  ->  ORACLE
+  Oui/Non  ->  Yes/No
+  Outils, logiciels et matériels  ->  Tools, Software and Hardware
+  Principaux domaines d’intervention  ->  Key Areas of Focus
+  Projet  ->  Project:
+  Projet :  ->  Project:
+  Période :  ->  Period:
+  Référence :  ->  Reference:
+  Résumé des interventions  ->  Summary of interventions
+  Résumé des technologies  ->  Technology Summary
+  SCRUM  ->  SCRUM
+  Sécurités  ->  Security
+  Technologies  ->  Technologies
+  Technologies utilisées dans le cadre du mandat:  ->  Technologies used as part of the mandate:
+  Technologies utilisées dans le cadre du mandat :  ->  Technologies used as part of the mandate:
+  Ville, pays  ->  City, country
+  WINDOWS  ->  WINDOWS
+  WINDOWS SUR SITE  ->  WINDOWS ON-PREMISES
+  Équivalence MIDI/MIFI :  ->  MIDI/MIFI Equivalence:
+  ÉVÉNEMENTIELLE (EVENT-DRIVEN)  ->  EVENT-DRIVEN
+
+--- EN Template -> Library Value (62) ---
+
+  AGILE  ->  AGILE
+  Autre langue… (spécifier)  ->  Another language... (specify)
+  Architectures  ->  Architectures
+  AWS  ->  AWS
+  AZURE DATA FACTORY  ->  AZURE DATA FACTORY
+  AZURE DEVOPS  ->  AZURE DEVOPS
+  Débutant/Intermédiaire/Avancé  ->  Beginner/Intermediate/Advanced
+  GESTION DE CERTIFICATS  ->  CERTIFICATE MANAGEMENT
+  Certifications  ->  Certifications
+  CI/CD  ->  CI/CD
+  Ville, pays  ->  City, country
+  Client  ->  Client
+  Bases de données  ->  Databases
+  Diplôme obtenu  ->  Diploma obtained
+  Formation académique  ->  Education
+  Effort (mois)  ->  Effort (months)
+  Efforts :  ->  Efforts:
+  Anglais  ->  English
+  ENTERPRISE ARCHITECT DE SPARX SYSTEMS  ->  ENTERPRISE ARCHITECT FROM SPARX SYSTEMS
+  Environnements et infrastructures  ->  Environments and Infrastructure
+  ÉVÉNEMENTIELLE (EVENT-DRIVEN)  ->  EVENT-DRIVEN
+  Frameworks, protocoles et bibliothèques  ->  Frameworks, Protocols, and Libraries
+  Français  ->  French
+  GUIDE VERT  ->  GREEN GUIDE
+  IDMS (ENVIRONNEMENT CENTRAL)  ->  IDMS (CENTRAL ENVIRONMENT)
+  KANBAN  ->  KANBAN
+  Principaux domaines d’intervention  ->  Key Areas of Focus
+  Langue  ->  Language
+  Niveau de maîtrise  ->  Level of Proficiency
+  LINUX SUR SITE  ->  LINUX ON-PREMISES
+  Méthodologies  ->  Methodologies
+  Équivalence MIDI/MIFI :  ->  MIDI/MIFI Equivalence:
+  mois  ->  months
+  Mois  ->  Months
+  MYSQL  ->  MYSQL
+  Langue maternelle  ->  Native Language
+  Non  ->  No
+  OLAP (CUBES ANALYTIQUES)  ->  OLAP (ANALYTICAL CUBES)
+  ORACLE  ->  ORACLE
+  Période :  ->  Period:
+  jours-personnes  ->  person-days
+  Fonction :  ->  Position
+  Fonction :  ->  Position:
+  Langages de programmation et progiciels  ->  Programming Languages and Software Packages
+  Projet :  ->  Project
+  Mandat no :  ->  Project No.:
+  Projet :  ->  Project:
+  Référence :  ->  Reference:
+  Envergure (j-p.)  ->  Scale (p-d.)
+  Envergure :  ->  Scale:
+  Nom de l'établissement scolaire  ->  School Name
+  SCRUM  ->  SCRUM
+  Sécurités  ->  Security
+  Technologies  ->  Technologies
+  Résumé des technologies  ->  Technology Summary
+  Outils, logiciels et matériels  ->  Tools, Software and Hardware
+  WINDOWS  ->  WINDOWS
+  WINDOWS SUR SITE  ->  WINDOWS ON-PREMISES
+  Année  ->  Year
+  Années d'obtention  ->  Year of Attainment
+  Années d'obtention (AAAA)  ->  Year of Attainment (YYYY)
+  Oui/Non  ->  Yes/No
